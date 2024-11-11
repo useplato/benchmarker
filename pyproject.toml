@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "benchmarker"
+version = "0.1.0"
+description = ""
+authors = ["Robert Farlow <robfarlow@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^1.0.1"
+pydantic = "^2.9.2"
+plato-cli = "^0.1.7"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
