@@ -4,13 +4,49 @@ from dotenv import load_dotenv
 from apify_client import ApifyClient
 
 load_dotenv(".env")
-
 apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
-
 plato = Plato(api_key=os.getenv("PLATO_API_KEY"), base_url=os.getenv("PLATO_BASE_URL"))
+
+def run_apify_actor(actor_id: str, run_input: dict):
+    run = apify_client.actor(actor_id).call(run_input=run_input)
+
+    items = []
+    
+    for item in apify_client.dataset(run["defaultDatasetId"]).iterate_items():
+        items.append(item)
+
+    return items
+
+def get_dict_structure(d):
+    if isinstance(d, dict):
+        return {k: get_dict_structure(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [get_dict_structure(d[0])] if d else []
+    else:
+        return type(d).__name__
 
 def run_benchmark():
     session = plato.start_session()
+    
+    test_actor_id = "ZU6CrmA10PRnzY64J"
+    test_url = "https://www.youtube.com/@destiny"
+    test_input = {
+        "start_urls": [
+            {
+                "url": test_url
+            }
+        ],
+    }
+
+    results = run_apify_actor(test_actor_id, test_input)[0]
+    result_structure = get_dict_structure(results)
+
+    task_prompt = f'''
+    extract the details on this page in the following format: {result_structure}
+    '''
+    
+    result = session.task(task=task_prompt, start_url=test_url)
+    print(result)
 
     session.end()
 
