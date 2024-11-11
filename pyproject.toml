@@ -12,6 +12,7 @@ pydantic = "^2.9.2"
 plato-cli = "^0.1.7"
 requests = "^2.32.3"
 apify-client = "^1.8.1"
+deepdiff = "^8.0.1"
 
 
 [build-system]

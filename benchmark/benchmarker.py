@@ -2,6 +2,7 @@ import os
 from plato import Plato
 from dotenv import load_dotenv
 from apify_client import ApifyClient
+from helpers import get_dict_structure, compare_dicts
 
 load_dotenv(".env")
 apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
@@ -16,14 +17,6 @@ def run_apify_actor(actor_id: str, run_input: dict):
         items.append(item)
 
     return items
-
-def get_dict_structure(d):
-    if isinstance(d, dict):
-        return {k: get_dict_structure(v) for k, v in d.items()}
-    elif isinstance(d, list):
-        return [get_dict_structure(d[0])] if d else []
-    else:
-        return type(d).__name__
 
 def run_benchmark():
     session = plato.start_session()
@@ -46,7 +39,9 @@ def run_benchmark():
     '''
     
     result = session.task(task=task_prompt, start_url=test_url)
-    print(result)
+    result_dict = result['data']['result']
+    score = compare_dicts(results, result_dict)
+    print(f"Score: {score}")
 
     session.end()
 
