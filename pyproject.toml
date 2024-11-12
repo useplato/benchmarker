@@ -13,7 +13,11 @@ plato-cli = "^0.1.7"
 requests = "^2.32.3"
 apify-client = "^1.8.1"
 deepdiff = "^8.0.1"
+pre-commit = "^4.0.1"
 
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.7.3"
 
 [build-system]
 requires = ["poetry-core"]
