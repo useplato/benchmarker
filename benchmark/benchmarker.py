@@ -1,8 +1,9 @@
 import os
-from plato import Plato
-from dotenv import load_dotenv
+
 from apify_client import ApifyClient
-from helpers import get_dict_structure, compare_dicts
+from dotenv import load_dotenv
+from helpers.general_helpers import compare_dicts, get_dict_structure
+from plato import Plato
 
 load_dotenv(".env")
 apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
