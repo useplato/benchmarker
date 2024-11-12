@@ -1,5 +1,5 @@
 import requests
-from helpers.general_helpers import extract_run_input_from_page
+from helpers.general_helpers import extract_run_input_from_apify_url
 
 
 def get_actors_from_store(
@@ -39,6 +39,5 @@ def get_example_actor_input(api_key: str, actor_id: str):
     actor_name = actor_info["data"]["name"]
 
     url = f"https://apify.com/{author_username}/{actor_name}/api/python"
-    response = requests.get(url)
-    example_input = extract_run_input_from_page(response.text)
+    example_input = extract_run_input_from_apify_url(url)
     return example_input

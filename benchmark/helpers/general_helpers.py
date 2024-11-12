@@ -1,6 +1,7 @@
 import json
 import re
 
+import requests
 from bs4 import BeautifulSoup
 from deepdiff import DeepDiff
 
@@ -43,7 +44,9 @@ def compare_dicts(dict1, dict2):
     return max(0, similarity_score)
 
 
-def extract_run_input_from_page(page_content: str):
+def extract_run_input_from_apify_url(url: str):
+    response = requests.get(url)
+    page_content = response.text
     soup = BeautifulSoup(page_content, "html.parser")
 
     code_blocks = soup.find_all("code")
