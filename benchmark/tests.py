@@ -5,4 +5,3 @@ class Test:
 
     def run(self):
         raise NotImplementedError("Not implemented")
-
