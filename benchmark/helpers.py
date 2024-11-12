@@ -1,5 +1,6 @@
 from deepdiff import DeepDiff
 
+
 def get_dict_structure(d):
     if isinstance(d, dict):
         return {k: get_dict_structure(v) for k, v in d.items()}
@@ -8,7 +9,8 @@ def get_dict_structure(d):
     else:
         return type(d).__name__
 
-def count_nested_keys(d, parent_key=''):
+
+def count_nested_keys(d, parent_key=""):
     """Recursively count all keys in a nested dictionary."""
     count = 0
     for key, value in d.items():
@@ -18,18 +20,21 @@ def count_nested_keys(d, parent_key=''):
             count += count_nested_keys(value, full_key)
     return count
 
+
 def compare_dicts(dict1, dict2):
     # Get the differences using DeepDiff
     diff = DeepDiff(dict1, dict2, ignore_order=True)
-    
+
     # Calculate the total number of differences (keys/values changed, added, or removed)
-    total_diff_count = len(diff.get('values_changed', {})) + \
-                       len(diff.get('dictionary_item_added', {})) + \
-                       len(diff.get('dictionary_item_removed', {}))
-    
+    total_diff_count = (
+        len(diff.get("values_changed", {}))
+        + len(diff.get("dictionary_item_added", {}))
+        + len(diff.get("dictionary_item_removed", {}))
+    )
+
     # Count all nested keys in both dictionaries
     total_keys = count_nested_keys(dict1) + count_nested_keys(dict2)
-    
+
     # Avoid division by zero
     if total_keys == 0:
         return 100.0 if dict1 == dict2 else 0.0
