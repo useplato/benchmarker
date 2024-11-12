@@ -11,7 +11,6 @@ def get_dict_structure(d):
 
 
 def count_nested_keys(d, parent_key=""):
-    """Recursively count all keys in a nested dictionary."""
     count = 0
     for key, value in d.items():
         full_key = f"{parent_key}.{key}" if parent_key else key

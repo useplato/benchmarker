@@ -394,14 +394,18 @@ type = ["mypy (>=1.11.2)"]
 
 [[package]]
 name = "plato-cli"
-version = "0.1.7"
+version = "0.1.11"
 description = "Plato Python Client"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "plato-cli-0.1.7.tar.gz", hash = "sha256:9390315abe8b3ffea4e8fe70799ee36b988a24b75a487ec8e752f2ec14d889df"},
-    {file = "plato_cli-0.1.7-py3-none-any.whl", hash = "sha256:d6b9704ae996e49946b77c8092501eb36ab0ef8f91f51b6c46c2eb9ac9ced036"},
+    {file = "plato_cli-0.1.11-py3-none-any.whl", hash = "sha256:380aedee0b6d124188ce193800af7176f0ed0bc25d3fd50bfe7d9e49314375ca"},
+    {file = "plato_cli-0.1.11.tar.gz", hash = "sha256:e66e52183f801375b22d458b7e55c4d25ce7b1d9d3b63a74d49eaad1f0c0bf18"},
 ]
+
+[package.dependencies]
+pydantic = "*"
+requests = "*"
 
 [[package]]
 name = "pre-commit"
@@ -731,4 +735,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "2a39ef51e9338f99b63ac40f7ea52de91b3314244ead9c16a7bcffaf5ebfdbf2"
+content-hash = "1abf0ea0dc469e13c6e428feb78e50a753e05809816084bf1d280a855252c3b1"
