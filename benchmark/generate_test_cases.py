@@ -6,7 +6,9 @@ from helpers.apify_helpers import get_actors_from_store, get_example_actor_input
 from helpers.general_helpers import limit_array_values
 from helpers.openai_helpers import generate_task_prompt
 from openai import OpenAI
+from dotenv import load_dotenv
 
+load_dotenv(".env")
 
 def generate_test_cases(number_of_tests: int = 10):
     openai_client = OpenAI()
@@ -45,6 +47,7 @@ def generate_test_cases(number_of_tests: int = 10):
         cur_actor_details["plato_task_prompt"] = task_prompt
         test_cases.append(cur_actor_details)
 
+    os.makedirs("test_data", exist_ok=True)
     with open("test_data/test_cases.json", "w") as f:
         json.dump(test_cases, f, indent=4)
 
