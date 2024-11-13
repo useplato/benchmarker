@@ -20,11 +20,11 @@ def run_benchmark():
     session = plato.start_session()
     results = []
 
-    try:
-        with open("test_data/test_cases.json", "r") as f:
-            test_cases = json.load(f)
+    with open("test_data/test_cases.json", "r") as f:
+        test_cases = json.load(f)
 
-        for test_case in test_cases:
+    for test_case in test_cases:
+        try:
             print(f"Running test case: {test_case['name']}")
             print("running apify actor...")
             start_time = time.time()
@@ -58,6 +58,8 @@ def run_benchmark():
             print(f"Score: {score}")
 
             test_results = {
+                "name": test_case["name"],
+                "completed": True,
                 "apify_results": apify_results,
                 "plato_results": result_dict,
                 "apify_time": apify_time,
@@ -66,14 +68,19 @@ def run_benchmark():
                 "time_diff": time_diff,
             }
             results.append(test_results)
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        session.end()
+        except Exception as e:
+            print(f"Error: {e}")
+            results.append(
+                {
+                    "name": test_case["name"],
+                    "completed": False,
+                    "error": str(e),
+                }
+            )
 
-    benchmark_file_name = (
-        f"benchmark_results_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
-    )
+    session.end()
+
+    benchmark_file_name = f"benchmark_results_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
 
     with open(f"test_data/{benchmark_file_name}", "w") as f:
         json.dump(results, f, indent=4)
