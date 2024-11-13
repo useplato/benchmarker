@@ -5,6 +5,7 @@ import os
 import time
 
 from apify_client import ApifyClient
+from benchmark_viewer.viewer import BenchmarkViewer
 from dotenv import load_dotenv
 from helpers.apify_helpers import run_apify_actor
 from helpers.general_helpers import compare_dicts, get_dict_structure
@@ -109,6 +110,8 @@ def run_benchmark(rerun_apify=False):
     with open(f"test_data/{benchmark_file_name}", "w") as f:
         json.dump(results, f, indent=4)
 
+    return results
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the benchmark.")
@@ -116,4 +119,6 @@ if __name__ == "__main__":
         "-r", "--rerunapify", action="store_true", help="Rerun the apify actor"
     )
     args = parser.parse_args()
-    run_benchmark(args.rerunapify)
+    results = run_benchmark(args.rerunapify)
+    viewer = BenchmarkViewer(results)
+    viewer.mainloop()
