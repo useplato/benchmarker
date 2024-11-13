@@ -1,18 +1,24 @@
 import json
 import re
+from typing import Any, List
 
 import requests
 from bs4 import BeautifulSoup
 from deepdiff import DeepDiff
+from pydantic import BaseModel, create_model
 
 
-def get_dict_structure(d):
+def get_dict_structure(d: Any) -> BaseModel:
     if isinstance(d, dict):
-        return {k: get_dict_structure(v) for k, v in d.items()}
+        fields = {k: (get_dict_structure(v), ...) for k, v in d.items()}
+        return create_model("DynamicModel", **fields)
     elif isinstance(d, list):
-        return [get_dict_structure(d[0])] if d else []
+        if d:
+            return List[get_dict_structure(d[0])]
+        else:
+            return List[Any]
     else:
-        return type(d).__name__
+        return type(d)
 
 
 def count_nested_keys(d, parent_key=""):
@@ -85,3 +91,13 @@ def extract_run_input_from_apify_url(url: str):
         example_input = {}
 
     return example_input
+
+
+def limit_array_values(input_dict):
+    if isinstance(input_dict, dict):
+        for key, value in input_dict.items():
+            if isinstance(value, list) and len(value) > 1:
+                input_dict[key] = value[:1]
+            elif isinstance(value, dict):
+                input_dict[key] = limit_array_values(value)
+    return input_dict

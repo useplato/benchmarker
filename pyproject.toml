@@ -9,12 +9,13 @@ readme = "README.md"
 python = "^3.9"
 python-dotenv = "^1.0.1"
 pydantic = "^2.9.2"
-plato-cli = "^0.1.11"
+plato-cli = "^0.1.12"
 requests = "^2.32.3"
 apify-client = "^1.8.1"
 deepdiff = "^8.0.1"
 pre-commit = "^4.0.1"
 beautifulsoup4 = "^4.12.3"
+openai = "^1.54.4"
 
 
 [tool.poetry.group.dev.dependencies]

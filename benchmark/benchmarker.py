@@ -1,48 +1,82 @@
+import datetime
+import json
 import os
+import time
 
 from apify_client import ApifyClient
 from dotenv import load_dotenv
+from helpers.apify_helpers import run_apify_actor
 from helpers.general_helpers import compare_dicts, get_dict_structure
 from plato import Plato
 
 load_dotenv(".env")
-apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
-plato = Plato(api_key=os.getenv("PLATO_API_KEY"), base_url=os.getenv("PLATO_BASE_URL"))
-
-
-def run_apify_actor(actor_id: str, run_input: dict):
-    run = apify_client.actor(actor_id).call(run_input=run_input)
-
-    items = []
-
-    for item in apify_client.dataset(run["defaultDatasetId"]).iterate_items():
-        items.append(item)
-
-    return items
 
 
 def run_benchmark():
+    apify_client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
+    plato = Plato(
+        api_key=os.getenv("PLATO_API_KEY"), base_url=os.getenv("PLATO_BASE_URL")
+    )
     session = plato.start_session()
+    results = []
 
-    test_actor_id = "ZU6CrmA10PRnzY64J"
-    test_url = "https://www.youtube.com/@destiny"
-    test_input = {
-        "start_urls": [{"url": test_url}],
-    }
+    try:
+        with open("test_data/test_cases.json", "r") as f:
+            test_cases = json.load(f)
 
-    results = run_apify_actor(test_actor_id, test_input)[0]
-    result_structure = get_dict_structure(results)
+        for test_case in test_cases:
+            print(f"Running test case: {test_case['name']}")
+            print("running apify actor...")
+            start_time = time.time()
+            apify_results = run_apify_actor(
+                test_case["id"], test_case["example_input"], apify_client
+            )[0]
+            end_time = time.time()
+            apify_time = end_time - start_time
+            print(f"Apify actor finished in {apify_time} seconds")
 
-    task_prompt = f"""
-    extract the details on this page in the following format: {result_structure}
-    """
+            result_model = get_dict_structure(apify_results)
 
-    result = session.task(task=task_prompt, start_url=test_url)
-    result_dict = result["data"]["result"]
-    score = compare_dicts(results, result_dict)
-    print(f"Score: {score}")
+            plato_task_prompt = test_case["plato_task_prompt"]["message"]
+            plato_start_url = test_case["plato_task_prompt"]["start_url"]
 
-    session.end()
+            print("running plato...")
+            start_time = time.time()
+            result = session.task(
+                task=plato_task_prompt,
+                start_url=plato_start_url,
+                response_format=result_model,
+            )
+            end_time = time.time()
+            plato_time = end_time - start_time
+            print(f"Plato finished in {plato_time} seconds")
+
+            result_dict = result["data"]["result"]
+            score = compare_dicts(apify_results, result_dict)
+            time_diff = plato_time - apify_time
+            print(f"Time difference: {time_diff} seconds")
+            print(f"Score: {score}")
+
+            test_results = {
+                "apify_results": apify_results,
+                "plato_results": result_dict,
+                "apify_time": apify_time,
+                "plato_time": plato_time,
+                "score": score,
+                "time_diff": time_diff,
+            }
+            results.append(test_results)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        session.end()
+
+    benchmark_file_name = (
+        f"benchmark_results_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
+    )
+
+    with open(f"test_data/{benchmark_file_name}", "w") as f:
+        json.dump(results, f, indent=4)
 
 
 if __name__ == "__main__":

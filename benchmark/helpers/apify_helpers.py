@@ -1,4 +1,5 @@
 import requests
+from apify_client import ApifyClient
 from helpers.general_helpers import extract_run_input_from_apify_url
 
 
@@ -41,3 +42,14 @@ def get_example_actor_input(api_key: str, actor_id: str):
     url = f"https://apify.com/{author_username}/{actor_name}/api/python"
     example_input = extract_run_input_from_apify_url(url)
     return example_input
+
+
+def run_apify_actor(actor_id: str, run_input: dict, apify_client: ApifyClient):
+    run = apify_client.actor(actor_id).call(run_input=run_input)
+
+    items = []
+
+    for item in apify_client.dataset(run["defaultDatasetId"]).iterate_items():
+        items.append(item)
+
+    return items
