@@ -1,3 +1,4 @@
+import difflib
 import json
 import os
 import tkinter as tk
@@ -21,6 +22,8 @@ class BenchmarkViewer(tk.Tk):
             self.test_data = initial_test_data
             self.display_results()
 
+        self.selected_test_case = None  # Track the selected test case
+
     def create_widgets(self):
         self.file_label = ttk.Label(self, text="Select JSON File:")
         self.file_label.pack(pady=10)
@@ -33,6 +36,19 @@ class BenchmarkViewer(tk.Tk):
 
         self.results_frame = ttk.Frame(self)
         self.results_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create a frame for the test case dropdown and the diff button
+        self.test_case_frame = ttk.Frame(self)
+        self.test_case_frame.pack(pady=10)
+
+        self.test_case_dropdown = ttk.Combobox(self.test_case_frame, state="readonly")
+        self.test_case_dropdown.pack(side=tk.LEFT, padx=5)
+        self.test_case_dropdown.bind("<<ComboboxSelected>>", self.on_test_select)
+
+        self.diff_button = ttk.Button(
+            self.test_case_frame, text="Show JSON Diff", command=self.show_json_diff
+        )
+        self.diff_button.pack(side=tk.LEFT, padx=5)
 
     def load_json_files(self):
         json_files = [f for f in os.listdir(self.test_data_dir) if f.endswith(".json")]
@@ -114,6 +130,60 @@ class BenchmarkViewer(tk.Tk):
         canvas = FigureCanvasTkAgg(fig, master=self.results_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Update the test case dropdown with test names
+        self.test_case_dropdown["values"] = [test["name"] for test in self.test_data]
+        self.test_case_dropdown.set("")  # Clear selection
+
+    def on_test_select(self, event):
+        selected_name = self.test_case_dropdown.get()
+        for test in self.test_data:
+            if test["name"] == selected_name:
+                self.selected_test_case = test
+                break
+
+    def show_json_diff(self):
+        if not self.selected_test_case:
+            ttk.Label(self.results_frame, text="No test case selected").pack(pady=10)
+            return
+
+        apify_results = self.selected_test_case.get("apify_results", {})
+        plato_results = self.selected_test_case.get("plato_results", {})
+
+        diff_window = tk.Toplevel(self)
+        diff_window.title("JSON Diff")
+
+        left_frame = ttk.Frame(diff_window)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        right_frame = ttk.Frame(diff_window)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        left_text = tk.Text(left_frame, wrap=tk.WORD)
+        left_text.pack(fill=tk.BOTH, expand=True)
+
+        right_text = tk.Text(right_frame, wrap=tk.WORD)
+        right_text.pack(fill=tk.BOTH, expand=True)
+
+        self.display_json_diff(left_text, right_text, apify_results, plato_results)
+
+    def display_json_diff(self, left_text, right_text, apify_results, plato_results):
+        apify_str = json.dumps(apify_results, indent=4).splitlines()
+        plato_str = json.dumps(plato_results, indent=4).splitlines()
+
+        diff = difflib.ndiff(apify_str, plato_str)
+
+        for line in diff:
+            if line.startswith("- "):
+                left_text.insert(tk.END, line[2:] + "\n", "deletion")
+            elif line.startswith("+ "):
+                right_text.insert(tk.END, line[2:] + "\n", "addition")
+            elif line.startswith("  "):
+                left_text.insert(tk.END, line[2:] + "\n")
+                right_text.insert(tk.END, line[2:] + "\n")
+
+        left_text.tag_config("deletion", background="red", foreground="white")
+        right_text.tag_config("addition", background="green", foreground="white")
 
 
 if __name__ == "__main__":

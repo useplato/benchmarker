@@ -31,22 +31,22 @@ def count_nested_keys(d, parent_key=""):
     return count
 
 
-def compare_dicts(dict1, dict2):
-    diff = DeepDiff(dict1, dict2, ignore_order=True)
+def compare_dicts(source_dict, target_dict):
+    diff = DeepDiff(source_dict, target_dict, ignore_order=True)
 
-    total_diff_count = (
-        len(diff.get("values_changed", {}))
-        + len(diff.get("dictionary_item_added", {}))
-        + len(diff.get("dictionary_item_removed", {}))
+    total_diff_count = len(diff.get("values_changed", {})) + len(
+        diff.get("dictionary_item_removed", {})
     )
 
-    total_keys = count_nested_keys(dict1) + count_nested_keys(dict2)
+    total_keys_in_source = count_nested_keys(source_dict)
 
     # Avoid division by zero
-    if total_keys == 0:
-        return 100.0 if dict1 == dict2 else 0.0
+    if total_keys_in_source == 0:
+        return 100.0 if source_dict == target_dict else 0.0
 
-    similarity_score = ((total_keys - total_diff_count) / total_keys) * 100
+    similarity_score = (
+        (total_keys_in_source - total_diff_count) / total_keys_in_source
+    ) * 100
     return max(0, similarity_score)
 
 

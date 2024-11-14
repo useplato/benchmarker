@@ -2,7 +2,9 @@ import argparse
 import datetime
 import json
 import os
+import sys
 import time
+import traceback
 
 from apify_client import ApifyClient
 from benchmark_viewer.viewer import BenchmarkViewer
@@ -49,9 +51,7 @@ def run_plato_test_case(test_case, plato_client):
     plato_time = end_time - start_time
     print(f"Plato finished in {plato_time} seconds")
 
-    result_dict = result["data"]["result"]
-
-    return result_dict, plato_time
+    return result, plato_time
 
 
 def run_benchmark(rerun_apify=False):
@@ -75,10 +75,11 @@ def run_benchmark(rerun_apify=False):
                 test_case = run_apify_test_case(test_cases, test_case, apify_client)
 
             plato_results, plato_time = run_plato_test_case(test_case, session)
+            plato_results_json = plato_results.model_dump()
 
             apify_results = test_case["apify_results"]
             apify_time = test_case["apify_time"]
-            score = compare_dicts(apify_results, plato_results)
+            score = compare_dicts(apify_results, plato_results_json)
             time_diff = plato_time - apify_time
             print(f"Score: {score}, Time diff: {time_diff}")
 
@@ -86,7 +87,7 @@ def run_benchmark(rerun_apify=False):
                 "name": test_case["name"],
                 "completed": True,
                 "apify_results": apify_results,
-                "plato_results": plato_results,
+                "plato_results": plato_results_json,
                 "apify_time": apify_time,
                 "plato_time": plato_time,
                 "score": score,
@@ -94,7 +95,8 @@ def run_benchmark(rerun_apify=False):
             }
             results.append(test_results)
         except Exception as e:
-            print(f"Error: {e}")
+            print("Error:", e, file=sys.stderr)
+            traceback.print_exc()
             results.append(
                 {
                     "name": test_case["name"],
