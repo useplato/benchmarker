@@ -62,7 +62,7 @@ def run_benchmark(rerun_apify=False):
     with open("test_data/test_cases.json", "r") as f:
         test_cases = json.load(f)
     results = []
-    with plato.session as session:
+    with plato.start_session() as session:
         for test_case in test_cases:
             try:
                 print(f"Running test case: {test_case['name']}")
