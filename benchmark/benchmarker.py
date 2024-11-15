@@ -59,53 +59,49 @@ def run_benchmark(rerun_apify=False):
     plato = Plato(
         api_key=os.getenv("PLATO_API_KEY"), base_url=os.getenv("PLATO_BASE_URL")
     )
-    session = plato.start_session()
-    results = []
-
     with open("test_data/test_cases.json", "r") as f:
         test_cases = json.load(f)
+    results = []
+    with plato.session as session:
+        for test_case in test_cases:
+            try:
+                print(f"Running test case: {test_case['name']}")
 
-    for test_case in test_cases:
-        try:
-            print(f"Running test case: {test_case['name']}")
+                if (not rerun_apify) and ("apify_results" in test_case):
+                    print("using cached apify results")
+                else:
+                    test_case = run_apify_test_case(test_cases, test_case, apify_client)
 
-            if (not rerun_apify) and ("apify_results" in test_case):
-                print("using cached apify results")
-            else:
-                test_case = run_apify_test_case(test_cases, test_case, apify_client)
+                plato_results, plato_time = run_plato_test_case(test_case, session)
+                plato_results_json = plato_results.model_dump()
 
-            plato_results, plato_time = run_plato_test_case(test_case, session)
-            plato_results_json = plato_results.model_dump()
+                apify_results = test_case["apify_results"]
+                apify_time = test_case["apify_time"]
+                score = compare_dicts(apify_results, plato_results_json)
+                time_diff = plato_time - apify_time
+                print(f"Score: {score}, Time diff: {time_diff}")
 
-            apify_results = test_case["apify_results"]
-            apify_time = test_case["apify_time"]
-            score = compare_dicts(apify_results, plato_results_json)
-            time_diff = plato_time - apify_time
-            print(f"Score: {score}, Time diff: {time_diff}")
-
-            test_results = {
-                "name": test_case["name"],
-                "completed": True,
-                "apify_results": apify_results,
-                "plato_results": plato_results_json,
-                "apify_time": apify_time,
-                "plato_time": plato_time,
-                "score": score,
-                "time_diff": time_diff,
-            }
-            results.append(test_results)
-        except Exception as e:
-            print("Error:", e, file=sys.stderr)
-            traceback.print_exc()
-            results.append(
-                {
+                test_results = {
                     "name": test_case["name"],
-                    "completed": False,
-                    "error": str(e),
+                    "completed": True,
+                    "apify_results": apify_results,
+                    "plato_results": plato_results_json,
+                    "apify_time": apify_time,
+                    "plato_time": plato_time,
+                    "score": score,
+                    "time_diff": time_diff,
                 }
-            )
-
-    session.end()
+                results.append(test_results)
+            except Exception as e:
+                print("Error:", e, file=sys.stderr)
+                traceback.print_exc()
+                results.append(
+                    {
+                        "name": test_case["name"],
+                        "completed": False,
+                        "error": str(e),
+                    }
+                )
 
     benchmark_file_name = f"benchmark_results_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
 
